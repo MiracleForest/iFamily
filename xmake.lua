@@ -1,5 +1,7 @@
 add_rules("mode.debug", "mode.release")
 
+add_repositories("MiF-repo https://github.com/MiracleForest/xmake-repo.git")
+
 target("iFamilyTests")
     set_kind("binary")
     add_files("iFamily/tests/**.cpp")
