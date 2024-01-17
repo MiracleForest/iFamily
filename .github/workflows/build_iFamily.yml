@@ -1,0 +1,145 @@
+on:
+  push:
+    paths:
+      - .github/workflows/build_iFamily.yml
+      - iFamily/**
+      - xmake.lua
+  pull_request:
+    paths:
+      - .github/workflows/build_iFamily.yml
+      - iFamily/**
+      - xmake.lua
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/AppData/Local/.xmake
+            .xmake
+          key: xmake-iFamily-windows-x64-${{ github.sha }}
+          restore-keys: |
+            xmake-iFamily-windows-x64-
+
+      - run: |
+          xmake repo -u
+
+      - run: |
+          xmake f -a x64 -m release -p windows -v -y
+
+      - run: |
+          xmake -w -y
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: iFamily-windows-x64-${{ github.sha }}
+          path: |
+            build/windows/x64/release/iFamily.dll
+            build/windows/x64/release/iFamily.lib
+            build/windows/x64/release/iFamily.pdb
+
+  build-debug:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/AppData/Local/.xmake
+            .xmake
+          key: xmake-iFamily-debug-windows-x64-${{ github.sha }}
+          restore-keys: |
+            xmake-iFamily-debug-windows-x64-
+
+      - run: |
+          xmake repo -u
+
+      - run: |
+          xmake f -a x64 -m debug -p windows -v -y
+
+      - run: |
+          xmake -w -y
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: iFamily-debug-windows-x64-${{ github.sha }}
+          path: |
+            build/windows/x64/debug/iFamily.dll
+            build/windows/x64/debug/iFamily.lib
+            build/windows/x64/debug/iFamily.pdb
+
+  build-with-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/AppData/Local/.xmake
+            .xmake
+          key: xmake-iFamily-with-tests-windows-x64-${{ github.sha }}
+          restore-keys: |
+            xmake-iFamily-with-tests-windows-x64-
+
+      - run: |
+          xmake repo -u
+
+      - run: |
+          xmake f -a x64 -m release -p windows -v -y --tests=true
+
+      - run: |
+          xmake -w -y
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: iFamily-with-tests-windows-x64-${{ github.sha }}
+          path: |
+            build/windows/x64/release/iFamily.dll
+            build/windows/x64/release/iFamily.lib
+            build/windows/x64/release/iFamily.pdb
+
+  build-debug-with-tests:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+
+      - uses: actions/cache@v3
+        with:
+          path: |
+            ~/AppData/Local/.xmake
+            .xmake
+          key: xmake-iFamily-debug-with-tests-windows-x64-${{ github.sha }}
+          restore-keys: |
+            xmake-iFamily-debug-with-tests-windows-x64-
+
+      - run: |
+          xmake repo -u
+
+      - run: |
+          xmake f -a x64 -m debug -p windows -v -y
+
+      - run: |
+          xmake -w -y
+
+      - uses: actions/upload-artifact@v3
+        with:
+          name: iFamily-debug-with-tests-windows-x64-${{ github.sha }}
+          path: |
+            build/windows/x64/debug/iFamily.dll
+            build/windows/x64/debug/iFamily.lib
+            build/windows/x64/debug/iFamily.pdb
