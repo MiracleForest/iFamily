@@ -1,0 +1,107 @@
+on:
+  release:
+    types:
+      - published
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        mode:
+          - debug
+          - release
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: xmake-io/github-action-setup-xmake@v1
+
+      - uses: actions/cache@v4
+        with:
+          path: |
+            ~/AppData/Local/.xmake
+          key: xmake-${{ hashFiles('xmake.lua') }}
+          restore-keys: |
+            xmake-
+
+      - run: |
+          xmake repo -u
+
+      - run: |
+          xmake f -a x64 -m ${{ matrix.mode }} -p windows -v -y
+
+      - run: |
+          xmake -v -w -y
+
+      - run: |
+          xmake package -v -y
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: iFamily-${{ matrix.mode }}-windows-x64-${{ github.sha }}
+          path: |
+            build/packages/i/iFamily/windows/x64/${{ matrix.mode }}/
+
+  update-release-notes:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Validate release stuff (CHANGELOG.md, etc.)
+        run: |
+          npm i -g keep-a-changelog
+          python scripts/validate_release.py --tag ${{ github.event.release.tag_name }}
+
+      - id: extract-release-notes
+        uses: ffurrer2/extract-release-notes@v2
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          body: |
+            ${{ steps.extract-release-notes.outputs.release_notes }}
+
+            | File | SHA256 |
+            | ---- | ------ |
+
+  upload-to-release:
+    needs:
+      - build
+      - update-release-notes
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        mode:
+          - debug
+          - release
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v3
+        with:
+          name: iFamily-${{ matrix.mode }}-windows-x64-${{ github.sha }}
+          path: artifact
+
+      - run: |
+          cp CHANGELOG.md README.md artifact/
+
+      - run: |
+          zip -r ../iFamily-${{ matrix.mode }}-windows-x64.zip *
+        working-directory: artifact
+
+      - id: calculate-sha256
+        run: |
+          echo sha256=$(sha256sum iFamily-windows-x64.zip | awk '{print $1}') >> $GITHUB_OUTPUT
+
+      - uses: softprops/action-gh-release@v1
+        with:
+          append_body: true
+          body: |
+            | iFamily-windows-x64.zip | ${{ steps.calculate-sha256.outputs.sha256 }} |
+          files: |
+            iFamily-${{ matrix.mode }}-windows-x64.zip
