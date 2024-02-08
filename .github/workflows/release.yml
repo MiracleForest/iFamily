@@ -82,7 +82,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v3
+      - uses: actions/download-artifact@v4
         with:
           name: iFamily-${{ matrix.mode }}-windows-x64-${{ github.sha }}
           path: artifact
@@ -96,12 +96,12 @@ jobs:
 
       - id: calculate-sha256
         run: |
-          echo sha256=$(sha256sum iFamily-windows-x64.zip | awk '{print $1}') >> $GITHUB_OUTPUT
+          echo sha256=$(sha256sum iFamily-${{ matrix.mode }}-windows-x64.zip | awk '{print $1}') >> $GITHUB_OUTPUT
 
       - uses: softprops/action-gh-release@v1
         with:
           append_body: true
           body: |
-            | iFamily-windows-x64.zip | ${{ steps.calculate-sha256.outputs.sha256 }} |
+            | iFamily-${{ matrix.mode }}-windows-x64.zip | ${{ steps.calculate-sha256.outputs.sha256 }} |
           files: |
             iFamily-${{ matrix.mode }}-windows-x64.zip

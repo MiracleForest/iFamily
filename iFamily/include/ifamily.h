@@ -22,7 +22,4 @@
 
 namespace MiracleForest::inline i
 {
-namespace core
-{
-} // namespace core
 } // namespace MiracleForest::inline i
