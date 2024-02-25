@@ -1,16 +1,8 @@
 on:
-  push:
-    paths:
-      - .github/workflows/build.yml
-      - iFamily/**
-      - xmake.lua
   pull_request:
-    paths:
-      - .github/workflows/build.yml 
-      - iFamily/**
-      - xmake.lua
+  push:
   workflow_dispatch:
-
+  
 jobs:
   build:
     strategy:
@@ -21,11 +13,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: xmake-io/github-action-setup-xmake@v1
-
+      
       - uses: actions/cache@v4
         with:
           path: |
@@ -43,16 +33,13 @@ jobs:
       - run: |
           xmake -v -w -y
 
-      - run: |
-          xmake package -v -y
-
       - uses: actions/upload-artifact@v4
         with:
-          name: iFamily-${{ matrix.mode }}-windows-x64-${{ github.sha }}
+          name: ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64-${{ github.sha }}
           path: |
-            build/packages/i/iFamily/windows/x64/${{ matrix.mode }}/
+            build/windows/x64/release/
 
-  check-style:
+  clang-format:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -60,6 +47,7 @@ jobs:
       - run: |
           choco install llvm -y --version=17.0.6
 
-      - run: |
-          Get-ChildItem iFamily/ -Filter *.cpp -Recurse | ForEach-Object { clang-format -i -Werror $_.FullName }
-          Get-ChildItem iFamily/ -Filter *.h -Recurse | ForEach-Object { clang-format -i -Werror $_.FullName }
+      - name: clang-format
+        run: |
+          Get-ChildItem iFamily/ -Filter *.cpp -Recurse | ForEach-Object { clang-format -i -Werror $_.FullName; if ($LASTEXITCODE -ne 0) { exit 1; } }
+          Get-ChildItem iFamily/ -Filter *.h -Recurse | ForEach-Object { clang-format -i -Werror $_.FullName; if ($LASTEXITCODE -ne 0) { exit 1; } }

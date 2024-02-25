@@ -14,11 +14,6 @@ def main():
     version = args["tag"].lstrip("v")
 
     validate_changelog(version)
-    
-    changelog_current_version_content = get_changelog_current_version_content(version)
-
-    print("## What's Changed:")
-    print(changelog_current_version_content)
 
 
 def get_args() -> Args:
@@ -30,20 +25,6 @@ def get_args() -> Args:
     return {
         "tag": args.tag,
     }
-
-
-def get_changelog_current_version_content(version: str) -> str:
-    with open("CHANGELOG.md", "r", encoding="utf-8") as f:
-        content = f.read()
-
-    regex = r"## \[{}\] - .*?\n(.*?)## \[".format(version)
-
-    result = re.search(regex, content, re.DOTALL)
-
-    if not result:
-        raise Exception("CHANGELOG.md lacks version {}".format(version))
-
-    return result.group(1)
 
 
 def validate_changelog(version: str):

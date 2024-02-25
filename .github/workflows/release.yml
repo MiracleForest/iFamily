@@ -2,7 +2,7 @@ on:
   release:
     types:
       - published
-
+  
 jobs:
   build:
     strategy:
@@ -13,11 +13,9 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
 
       - uses: xmake-io/github-action-setup-xmake@v1
-
+      
       - uses: actions/cache@v4
         with:
           path: |
@@ -35,14 +33,11 @@ jobs:
       - run: |
           xmake -v -w -y
 
-      - run: |
-          xmake package -v -y
-
       - uses: actions/upload-artifact@v4
         with:
-          name: iFamily-${{ matrix.mode }}-windows-x64-${{ github.sha }}
+          name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
           path: |
-            build/packages/i/iFamily/windows/x64/${{ matrix.mode }}/
+            build/windows/x64/${{ matrix.mode }}/
 
   update-release-notes:
     permissions:
@@ -61,11 +56,12 @@ jobs:
 
       - uses: softprops/action-gh-release@v1
         with:
-          body: |
+          body: |-
             ${{ steps.extract-release-notes.outputs.release_notes }}
 
             | File | SHA256 |
             | ---- | ------ |
+
 
   upload-to-release:
     needs:
@@ -84,24 +80,24 @@ jobs:
 
       - uses: actions/download-artifact@v4
         with:
-          name: iFamily-${{ matrix.mode }}-windows-x64-${{ github.sha }}
+          name: ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64-${{ github.sha }}
           path: artifact
 
       - run: |
           cp CHANGELOG.md README.md artifact/
 
       - run: |
-          zip -r ../iFamily-${{ matrix.mode }}-windows-x64.zip *
+          zip -r ../${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64.zip *
         working-directory: artifact
 
       - id: calculate-sha256
         run: |
-          echo sha256=$(sha256sum iFamily-${{ matrix.mode }}-windows-x64.zip | awk '{print $1}') >> $GITHUB_OUTPUT
+          echo sha256=$(sha256sum ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64.zip | awk '{print $1}') >> $GITHUB_OUTPUT
 
       - uses: softprops/action-gh-release@v1
         with:
           append_body: true
-          body: |
-            | iFamily-${{ matrix.mode }}-windows-x64.zip | ${{ steps.calculate-sha256.outputs.sha256 }} |
+          body: |-
+            | ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64.zip | ${{ steps.calculate-sha256.outputs.sha256 }} |
           files: |
-            iFamily-${{ matrix.mode }}-windows-x64.zip
+            ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64.zip
