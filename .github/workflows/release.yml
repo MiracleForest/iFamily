@@ -5,11 +5,6 @@ on:
   
 jobs:
   build:
-    strategy:
-      matrix:
-        mode:
-          - debug
-          - release
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
@@ -28,16 +23,16 @@ jobs:
           xmake repo -u
 
       - run: |
-          xmake f -a x64 -m ${{ matrix.mode }} -p windows -v -y
+          xmake f -a x64 -m release -p windows -v -y
 
       - run: |
           xmake -v -w -y
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64-${{ github.sha }}
+          name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
           path: |
-            build/windows/x64/${{ matrix.mode }}/
+            build/windows/x64/release/
 
   update-release-notes:
     permissions:
@@ -72,32 +67,39 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        mode:
-          - debug
-          - release
+        header-only:
+          - true
+          - false
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/download-artifact@v4
+      - run: |
+          mkdir artifact/
+
+      - if: ${{ matrix.header-only == true }}
+        uses: actions/download-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64-${{ github.sha }}
-          path: artifact
+          name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
+          path: artifact/bin/
 
       - run: |
-          cp CHANGELOG.md README.md artifact/
+          cp README.md artifact/
 
       - run: |
-          zip -r ../${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64.zip *
+          cp -r iFamily/include/ artifact/
+
+      - run: |
+          zip -r ../${{ github.event.repository.name }}${{ matrix.header-only == true && '' || '-test' }}-windows-x64.zip *
         working-directory: artifact
-
+        
       - id: calculate-sha256
         run: |
-          echo sha256=$(sha256sum ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64.zip | awk '{print $1}') >> $GITHUB_OUTPUT
-
+          echo sha256=$(sha256sum ${{ github.event.repository.name }}${{ matrix.header-only == true && '' || '-test' }}-windows-x64.zip | awk '{print $1}') >> $GITHUB_OUTPUT
+          
       - uses: softprops/action-gh-release@v1
         with:
           append_body: true
           body: |-
-            | ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64.zip | ${{ steps.calculate-sha256.outputs.sha256 }} |
+            | ${{ github.event.repository.name }}${{ matrix.header-only == true && '' || '-test' }}-windows-x64.zip | ${{ steps.calculate-sha256.outputs.sha256 }} |
           files: |
-            ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64.zip
+            ${{ github.event.repository.name }}${{ matrix.header-only == true && '' || '-test' }}-windows-x64.zip
