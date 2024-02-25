@@ -36,6 +36,7 @@ using char8   = u8char;
 using char16  = u16char;
 using int64   = long long;
 using uint64  = unsigned long long;
+using CString = const char*;
 
 using __unk_type_v__ = void*;
 using unkTypev       = void*;
@@ -78,6 +79,12 @@ using Ref = _Type&;
 
 template<typename _Type>
 using RRef = _Type&&;
+
+template<typename _Type>
+using CRRef = const _Type&&;
+
+template<typename _Type>
+using RPtr = _Type*&;
 
 template<typename _Type>
 struct stdcall_cast_s;
