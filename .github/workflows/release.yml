@@ -35,7 +35,7 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: ${{ github.event.repository.name }}-windows-x64-${{ github.sha }}
+          name: ${{ github.event.repository.name }}-${{ matrix.mode }}-windows-x64-${{ github.sha }}
           path: |
             build/windows/x64/${{ matrix.mode }}/
 
