@@ -89,17 +89,17 @@ jobs:
           cp -r iFamily/include/ artifact/
 
       - run: |
-          zip -r ../${{ github.event.repository.name }}${{ matrix.header-only == true && '' || '-test' }}-windows-x64.zip *
+          zip -r ../${{ github.event.repository.name }}${{ matrix.header-only == true && '-header-only' || '-test' }}-windows-x64.zip *
         working-directory: artifact
         
       - id: calculate-sha256
         run: |
-          echo sha256=$(sha256sum ${{ github.event.repository.name }}${{ matrix.header-only == true && '' || '-test' }}-windows-x64.zip | awk '{print $1}') >> $GITHUB_OUTPUT
+          echo sha256=$(sha256sum ${{ github.event.repository.name }}${{ matrix.header-only == true && '-header-only' || '-test' }}-windows-x64.zip | awk '{print $1}') >> $GITHUB_OUTPUT
           
       - uses: softprops/action-gh-release@v1
         with:
           append_body: true
           body: |-
-            | ${{ github.event.repository.name }}${{ matrix.header-only == true && '' || '-test' }}-windows-x64.zip | ${{ steps.calculate-sha256.outputs.sha256 }} |
+            | ${{ github.event.repository.name }}${{ matrix.header-only == true && '-header-only' || '-test' }}-windows-x64.zip | ${{ steps.calculate-sha256.outputs.sha256 }} |
           files: |
-            ${{ github.event.repository.name }}${{ matrix.header-only == true && '' || '-test' }}-windows-x64.zip
+            ${{ github.event.repository.name }}${{ matrix.header-only == true && '-header-only' || '-test' }}-windows-x64.zip
